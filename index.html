@@ -275,16 +275,29 @@
     const API_URL = "https://scraapper.onrender.com/scrape"; 
 
     let currentData = [];
+    let currentSkip = 0;
+    let lastQuery = "";
 
     function handleKeyPress(e) {
         if (e.key === 'Enter') {
-            getData();
+            getData(false);
         }
     }
 
-    async function getData() {
+    async function getData(isLoadMore = false) {
         const query = document.getElementById("q").value.trim();
         if (!query) return alert("Please enter a search query!");
+
+        if (!isLoadMore) {
+            currentSkip = 0;
+            currentData = [];
+            lastQuery = query;
+        } else if (query !== lastQuery) {
+            // If they changed the query, reset everything
+            currentSkip = 0;
+            currentData = [];
+            lastQuery = query;
+        }
 
         const btn = document.getElementById("searchBtn");
         const btnText = document.getElementById("btnText");
@@ -300,14 +313,21 @@
         btnText.style.display = "none";
         loader.style.display = "block";
         loadingText.style.display = "block";
+        if (isLoadMore) {
+            loadingText.innerText = `Fast-forwarding to result #${currentSkip + 1}... extracting next 10 items!`;
+        } else {
+            loadingText.innerText = "Fetching data... This may take a minute. First request might take longer (Cold Start).";
+        }
         
         resultsContainer.style.display = "block";
-        emptyState.style.display = "none";
-        resultsTable.style.display = "none";
-        actions.style.display = "none";
+        if (!isLoadMore) {
+            emptyState.style.display = "none";
+            resultsTable.style.display = "none";
+            actions.style.display = "none";
+        }
         
         try {
-            const res = await fetch(`${API_URL}?q=${encodeURIComponent(query)}&limit=10`);
+            const res = await fetch(`${API_URL}?q=${encodeURIComponent(query)}&limit=10&skip=${currentSkip}`);
             
             if (!res.ok) {
                 const errorData = await res.json().catch(() => null);
@@ -316,14 +336,18 @@
             }
             
             const data = await res.json();
-            currentData = data;
             
-            resultsBody.innerHTML = "";
+            if (!isLoadMore) {
+                resultsBody.innerHTML = "";
+            }
             
-            if (data.length === 0) {
+            if (data.length === 0 && !isLoadMore) {
                 emptyState.innerHTML = "<p>No results found. Try a different query.</p>";
                 emptyState.style.display = "block";
-            } else {
+            } else if (data.length > 0) {
+                currentData = [...currentData, ...data];
+                currentSkip += data.length; // Update skip for next time
+
                 data.forEach(item => {
                     const tr = document.createElement("tr");
                     const websiteLink = item.website ? `<a href="${item.website}" target="_blank">Website</a>` : `<span style="color: var(--text-muted); font-size: 0.85rem">No site</span>`;
@@ -345,12 +369,28 @@
                 });
                 
                 resultsTable.style.display = "table";
+                
+                // Add Load More button to actions
+                actions.innerHTML = `
+                    <button class="btn-secondary" onclick="getData(true)" style="margin-right: auto; background: var(--primary); color: white; border: none;">
+                        Load Next 10 Results
+                    </button>
+                    <button class="btn-secondary" onclick="downloadCSV()">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        Download CSV (${currentData.length})
+                    </button>
+                `;
                 actions.style.display = "flex";
+            } else if (isLoadMore && data.length === 0) {
+                alert("No more results found for this search!");
             }
 
         } catch (error) {
-            emptyState.innerHTML = `<p style="color: #EF4444;">Error: ${error.message}. <br/><br/>Make sure your backend is running and CORS is enabled.</p>`;
+            emptyState.innerHTML = `<p style="color: #EF4444;">Error: ${error.message}. <br/><br/>Make sure your backend is running.</p>`;
             emptyState.style.display = "block";
+            if (isLoadMore) resultsTable.style.display = "none";
         } finally {
             btn.disabled = false;
             btnText.style.display = "block";
