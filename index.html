@@ -310,7 +310,9 @@
             const res = await fetch(`${API_URL}?q=${encodeURIComponent(query)}&limit=10`);
             
             if (!res.ok) {
-                throw new Error("API responded with status " + res.status);
+                const errorData = await res.json().catch(() => null);
+                const errorMsg = errorData && errorData.details ? errorData.details : `API responded with status ${res.status}`;
+                throw new Error(errorMsg);
             }
             
             const data = await res.json();
