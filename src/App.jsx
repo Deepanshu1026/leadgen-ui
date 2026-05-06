@@ -3,12 +3,12 @@ import { useState, useRef, useEffect } from 'react'
 const API_URL = "http://localhost:3000/scrape"
 
 const QUICK_SEARCHES = [
-  { icon: '🍽', label: 'Restaurants, CP Delhi', q: 'restaurants Connaught Place Delhi' },
-  { icon: '🦷', label: 'Dentists, Noida', q: 'dental clinic Noida sector 15' },
-  { icon: '💪', label: 'Gyms, Koramangala', q: 'gym Bengaluru Koramangala' },
-  { icon: '📊', label: 'CA Firms, Delhi', q: 'ca firm South Delhi' },
-  { icon: '🏨', label: 'Hotels, Jaipur', q: 'hotel Jaipur' },
-  { icon: '🖥', label: 'Coworking, Bandra', q: 'coworking space Mumbai Bandra' },
+  { icon: '📈', label: 'Marketing Agencies', q: 'digital marketing agencies Mumbai' },
+  { icon: '💻', label: 'Software Companies', q: 'software development companies Bengaluru' },
+  { icon: '🏢', label: 'Real Estate Brokers', q: 'real estate agencies Dubai' },
+  { icon: '⚖️', label: 'Law Firms', q: 'law firms New York' },
+  { icon: '📊', label: 'CA Firms', q: 'chartered accountants South Delhi' },
+  { icon: '🖥', label: 'Coworking Spaces', q: 'coworking spaces London' },
 ]
 
 const SCRAPING_STEPS = [
@@ -363,9 +363,17 @@ export default function App() {
   const quickSearch = (q) => { setQuery(q); doSearch(false, q); setFocused(false) }
 
   const POPULAR_SEARCHES = [
-    "plumbers New York", "dentists London", "cafes Paris", "gyms Mumbai",
-    "restaurants Connaught Place Delhi", "dental clinic Noida",
-    "gym Bengaluru Koramangala", "ca firm South Delhi", "hotel Jaipur", "coworking space Mumbai Bandra"
+    // High-Value B2B Leads
+    "digital marketing agencies Mumbai", "software development companies Bengaluru",
+    "real estate agencies Dubai", "law firms New York", "logistics companies Chicago",
+    "recruitment agencies London", "accounting firms Sydney", "IT consultants Singapore",
+    "web design agencies Austin", "event management companies Paris", "chartered accountants Delhi",
+    "construction companies Toronto", "architectural firms Melbourne", "PR agencies San Francisco",
+
+    // Healthcare & Local Businesses
+    "dental clinics Noida", "hospitals in Toronto", "chiropractors Los Angeles",
+    "restaurants Connaught Place Delhi", "coworking spaces Mumbai",
+    "boutique hotels Jaipur", "gyms Bengaluru"
   ]
   const suggestions = POPULAR_SEARCHES.filter(s =>
     s.toLowerCase().includes(query.toLowerCase()) && s.toLowerCase() !== query.toLowerCase()
