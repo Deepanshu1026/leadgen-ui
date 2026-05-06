@@ -428,7 +428,7 @@ export default function App() {
         .lg-root { font-family:'Geist',system-ui,sans-serif; min-height:100vh; color:#e8e8f0; }
 
         /* HERO */
-        .hero { padding:6rem 2.5rem 4rem; position:relative; display:flex; justify-content:center; }
+        .hero { padding:6rem 2.5rem 4rem; display:flex; justify-content:center; }
         .hero-grid {
           position:absolute; inset:0;
           background-image:linear-gradient(rgba(255,255,255,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.05) 1px,transparent 1px);
@@ -468,12 +468,16 @@ export default function App() {
         .fl-rating { font-size:10px; color:#64748b; font-family:'Geist',monospace; text-transform:uppercase; }
         @keyframes floatUp { 0% { transform:translateY(0) scale(0.85); opacity:0; } 10% { opacity:1; transform:translateY(-80px) scale(1); } 90% { opacity:1; } 100% { transform:translateY(-800px) scale(1.05); opacity:0; } }
         @keyframes pulsePing { 0% { transform:scale(1); opacity:1; } 100% { transform:scale(2); opacity:0; } }
-        .fl-0 { left:4%; animation-duration:14s; animation-delay:0s; }
-        .fl-1 { left:82%; animation-duration:17s; animation-delay:2s; }
-        .fl-2 { left:12%; animation-duration:15s; animation-delay:6s; }
-        .fl-3 { left:78%; animation-duration:18s; animation-delay:9s; }
-        .fl-4 { left:6%; animation-duration:16s; animation-delay:12s; }
-        .fl-5 { left:86%; animation-duration:19s; animation-delay:15s; }
+        .fl-0 { right:calc(50% + 380px); animation-duration:14s; animation-delay:0s; }
+        .fl-1 { left:calc(50% + 380px); animation-duration:17s; animation-delay:2s; }
+        .fl-2 { right:calc(50% + 460px); animation-duration:15s; animation-delay:6s; }
+        .fl-3 { left:calc(50% + 460px); animation-duration:18s; animation-delay:9s; }
+        .fl-4 { right:calc(50% + 550px); animation-duration:16s; animation-delay:12s; }
+        .fl-5 { left:calc(50% + 550px); animation-duration:19s; animation-delay:15s; }
+
+        @media (max-width: 1024px) {
+          .hero-floating-leads { display: none; }
+        }
 
         .search-row { display:flex; gap:12px; width:100%; max-width:640px; background:rgba(15,15,25,0.6); padding:8px; border-radius:20px; border:1px solid rgba(255,255,255,0.08); box-shadow:0 20px 40px rgba(0,0,0,0.4),inset 0 0 0 1px rgba(255,255,255,0.02); backdrop-filter:blur(20px); transition:transform .3s cubic-bezier(.175,.885,.32,1.275),box-shadow .3s ease; }
         .search-row:focus-within { transform:translateY(-2px); border-color:rgba(129,140,248,0.4); box-shadow:0 25px 50px rgba(0,0,0,0.5),0 0 30px rgba(99,102,241,0.2); }
@@ -542,7 +546,7 @@ export default function App() {
         <div className="hero">
           <div className="hero-grid" />
           <div className="hero-glow" />
-          
+
           <div className="hero-floating-leads">
             {FAKE_NAMES.slice(0, 6).map((name, i) => (
               <div key={i} className={`float-lead fl-${i}`}>
