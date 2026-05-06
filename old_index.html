@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeadGen Pro | Google Maps Scraper</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338CA;
+            --bg: #0F172A;
+            --surface: #1E293B;
+            --text: #F8FAFC;
+            --text-muted: #94A3B8;
+            --border: #334155;
+            --success: #10B981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #818CF8, #C084FC);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .search-box {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        input {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+        }
+
+        button {
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        button:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 1rem;
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .results-container {
+            background: var(--surface);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 1rem 1.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        a {
+            color: #818CF8;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .loader {
+            display: none;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        .loading-text {
+            text-align: center;
+            color: var(--text-muted);
+            margin-top: 1rem;
+            display: none;
+            font-size: 0.9rem;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <h1>LeadGen Pro</h1>
+            <p class="subtitle">Extract local business leads instantly</p>
+        </header>
+
+        <div class="search-box">
+            <input type="text" id="q" placeholder="e.g. dental clinic sector 15 noida"
+                onkeypress="handleKeyPress(event)" />
+            <button id="searchBtn" onclick="getData()">
+                <span id="btnText">Search</span>
+                <div id="loader" class="loader"></div>
+            </button>
+        </div>
+
+        <div id="loadingText" class="loading-text">
+            Fetching data... This may take a minute depending on the amount of results. First request might take longer
+            (Cold Start).
+        </div>
+
+        <div class="actions" id="actions" style="display: none;">
+            <button class="btn-secondary" onclick="downloadCSV()">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
+                Download CSV
+            </button>
+        </div>
+
+        <div class="results-container" id="resultsContainer">
+            <div id="emptyState" class="empty-state">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <p>Enter a query above to start scraping</p>
+            </div>
+
+            <table id="resultsTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Business Name</th>
+                        <th>Rating / Reviews</th>
+                        <th>Phone</th>
+                        <th>Address</th>
+                        <th>Links</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsBody">
+                    <!-- Results will be injected here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // 🔥🔥🔥 IMPORTANT 🔥🔥🔥
+        // REPLACE THIS WITH YOUR RENDER URL
+        // Example: "https://leadgen-scraper.onrender.com/scrape"
+        const API_URL = "http://localhost:3000/scrape";
+
+        let currentData = [];
+        let currentSkip = 0;
+        let lastQuery = "";
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') {
+                getData(false);
+            }
+        }
+
+        async function getData(isLoadMore = false) {
+            const query = document.getElementById("q").value.trim();
+            if (!query) return alert("Please enter a search query!");
+
+            if (!isLoadMore) {
+                currentSkip = 0;
+                currentData = [];
+                lastQuery = query;
+            } else if (query !== lastQuery) {
+                // If they changed the query, reset everything
+                currentSkip = 0;
+                currentData = [];
+                lastQuery = query;
+            }
+
+            const btn = document.getElementById("searchBtn");
+            const btnText = document.getElementById("btnText");
+            const loader = document.getElementById("loader");
+            const loadingText = document.getElementById("loadingText");
+            const resultsContainer = document.getElementById("resultsContainer");
+            const emptyState = document.getElementById("emptyState");
+            const resultsTable = document.getElementById("resultsTable");
+            const resultsBody = document.getElementById("resultsBody");
+            const actions = document.getElementById("actions");
+
+            btn.disabled = true;
+            btnText.style.display = "none";
+            loader.style.display = "block";
+            loadingText.style.display = "block";
+            if (isLoadMore) {
+                loadingText.innerText = `Fast-forwarding to result #${currentSkip + 1}... extracting next 10 items!`;
+            } else {
+                loadingText.innerText = "Fetching data... This may take a minute. First request might take longer (Cold Start).";
+            }
+
+            resultsContainer.style.display = "block";
+            if (!isLoadMore) {
+                emptyState.style.display = "none";
+                resultsTable.style.display = "none";
+                actions.style.display = "none";
+            }
+
+            try {
+                const res = await fetch(`${API_URL}?q=${encodeURIComponent(query)}&limit=10&skip=${currentSkip}`);
+
+                if (!res.ok) {
+                    const errorData = await res.json().catch(() => null);
+                    const errorMsg = errorData && errorData.details ? errorData.details : `API responded with status ${res.status}`;
+                    throw new Error(errorMsg);
+                }
+
+                const data = await res.json();
+
+                if (!isLoadMore) {
+                    resultsBody.innerHTML = "";
+                }
+
+                if (data.length === 0 && !isLoadMore) {
+                    emptyState.innerHTML = "<p>No results found. Try a different query.</p>";
+                    emptyState.style.display = "block";
+                } else if (data.length > 0) {
+                    currentData = [...currentData, ...data];
+                    currentSkip += data.length; // Update skip for next time
+
+                    data.forEach(item => {
+                        const tr = document.createElement("tr");
+                        const websiteLink = item.website ? `<a href="${item.website}" target="_blank">Website</a>` : `<span style="color: var(--text-muted); font-size: 0.85rem">No site</span>`;
+                        const mapsLink = `<a href="${item.google_link}" target="_blank" style="margin-left: 10px;">Maps</a>`;
+
+                        tr.innerHTML = `
+                        <td style="font-weight: 500;">${item.name}</td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="color: #FBBF24;">★ ${item.rating || 'N/A'}</span>
+                                <span style="font-size: 0.85rem; color: var(--text-muted)">(${item.reviews || '0'})</span>
+                            </div>
+                        </td>
+                        <td>${item.phone || '<span style="color: var(--text-muted); font-size: 0.85rem">N/A</span>'}</td>
+                        <td style="font-size: 0.9rem; max-width: 250px;">${item.address || 'N/A'}</td>
+                        <td>${websiteLink} ${mapsLink}</td>
+                    `;
+                        resultsBody.appendChild(tr);
+                    });
+
+                    resultsTable.style.display = "table";
+
+                    // Add Load More button to actions
+                    actions.innerHTML = `
+                    <button class="btn-secondary" onclick="getData(true)" style="margin-right: auto; background: var(--primary); color: white; border: none;">
+                        Load Next 10 Results
+                    </button>
+                    <button class="btn-secondary" onclick="downloadCSV()">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        Download CSV (${currentData.length})
+                    </button>
+                `;
+                    actions.style.display = "flex";
+                } else if (isLoadMore && data.length === 0) {
+                    alert("No more results found for this search!");
+                }
+
+            } catch (error) {
+                emptyState.innerHTML = `<p style="color: #EF4444;">Error: ${error.message}. <br/><br/>Make sure your backend is running.</p>`;
+                emptyState.style.display = "block";
+                if (isLoadMore) resultsTable.style.display = "none";
+            } finally {
+                btn.disabled = false;
+                btnText.style.display = "block";
+                loader.style.display = "none";
+                loadingText.style.display = "none";
+            }
+        }
+
+        function downloadCSV() {
+            if (!currentData || currentData.length === 0) return;
+
+            const headers = ['Name', 'Rating', 'Reviews', 'Phone', 'Address', 'Website', 'Google Maps Link'];
+
+            const escapeCSV = (str) => {
+                if (!str) return '""';
+                return `"${str.toString().replace(/"/g, '""')}"`;
+            };
+
+            const csvRows = [];
+            csvRows.push(headers.join(','));
+
+            for (const item of currentData) {
+                const row = [
+                    escapeCSV(item.name),
+                    escapeCSV(item.rating),
+                    escapeCSV(item.reviews),
+                    escapeCSV(item.phone),
+                    escapeCSV(item.address),
+                    escapeCSV(item.website),
+                    escapeCSV(item.google_link)
+                ];
+                csvRows.push(row.join(','));
+            }
+
+            const csvContent = csvRows.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            const timestamp = new Date().toISOString().split('T')[0];
+            a.setAttribute('download', `leads_${timestamp}.csv`);
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    </script>
+</body>
+
+</html>
