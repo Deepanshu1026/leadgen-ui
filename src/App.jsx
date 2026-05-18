@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 
-const API_URL = "http://localhost:3000/scrape"
+const API_URL = "https://scraapper.onrender.com/scrape"
 
 const QUICK_SEARCHES = [
   { icon: '📈', label: 'Marketing Agencies', q: 'digital marketing agencies Mumbai' },
